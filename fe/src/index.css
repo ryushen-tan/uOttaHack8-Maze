@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: 'Harabara';
+  src: url('/fonts/Harabara.woff2') format('woff2'),
+       url('/fonts/Harabara.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+@keyframes shuffle {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  10% {
+    transform: translate(-2px, -3px) rotate(-2deg);
+  }
+  20% {
+    transform: translate(2px, 3px) rotate(2deg);
+  }
+  30% {
+    transform: translate(-3px, 2px) rotate(-1deg);
+  }
+  40% {
+    transform: translate(3px, -2px) rotate(1deg);
+  }
+  50% {
+    transform: translate(-1px, 3px) rotate(-2deg);
+  }
+  60% {
+    transform: translate(1px, -3px) rotate(2deg);
+  }
+  70% {
+    transform: translate(-2px, 1px) rotate(-1deg);
+  }
+  80% {
+    transform: translate(2px, -1px) rotate(1deg);
+  }
+  90% {
+    transform: translate(-1px, -2px) rotate(-1deg);
+  }
+}
+
+.shuffle-letter {
+  display: inline-block;
+  animation: shuffle 2s ease-in-out infinite;
+}
+
+@keyframes fade-loading {
+  0%, 100% {
+    opacity: 0.4;
+    background-color: rgb(17, 23, 30); /* gray-800 */
+  }
+  50% {
+    opacity: 0.8;
+    background-color: rgb(23, 27, 33); /* gray-700 */
+  }
+}
+
+.fade-loading {
+  animation: fade-loading 2s ease-in-out infinite;
+}
