@@ -30,19 +30,21 @@ const Crosshair = ({ color = 'white', containerRef = null }) => {
 
       if (containerRef?.current) {
         const bounds = containerRef.current.getBoundingClientRect();
-        if (
-          ev.clientX < bounds.left ||
-          ev.clientX > bounds.right ||
-          ev.clientY < bounds.top ||
-          ev.clientY > bounds.bottom
-        ) {
-          gsap.to([lineHorizontalRef.current, lineVerticalRef.current], {
-            opacity: 0
-          });
-        } else {
-          gsap.to([lineHorizontalRef.current, lineVerticalRef.current], {
-            opacity: 1
-          });
+        if (lineHorizontalRef.current && lineVerticalRef.current) {
+          if (
+            ev.clientX < bounds.left ||
+            ev.clientX > bounds.right ||
+            ev.clientY < bounds.top ||
+            ev.clientY > bounds.bottom
+          ) {
+            gsap.to([lineHorizontalRef.current, lineVerticalRef.current], {
+              opacity: 0
+            });
+          } else {
+            gsap.to([lineHorizontalRef.current, lineVerticalRef.current], {
+              opacity: 1
+            });
+          }
         }
       }
     };
@@ -55,19 +57,23 @@ const Crosshair = ({ color = 'white', containerRef = null }) => {
       ty: { previous: 0, current: 0, amt: 0.15 }
     };
 
-    gsap.set([lineHorizontalRef.current, lineVerticalRef.current], {
-      opacity: 0
-    });
+      if (lineHorizontalRef.current && lineVerticalRef.current) {
+        gsap.set([lineHorizontalRef.current, lineVerticalRef.current], {
+          opacity: 0
+        });
+      }
 
     const onMouseMove = () => {
       renderedStyles.tx.previous = renderedStyles.tx.current = mouse.x;
       renderedStyles.ty.previous = renderedStyles.ty.current = mouse.y;
 
-      gsap.to([lineHorizontalRef.current, lineVerticalRef.current], {
-        duration: 0.9,
-        ease: 'Power3.easeOut',
-        opacity: 1
-      });
+      if (lineHorizontalRef.current && lineVerticalRef.current) {
+        gsap.to([lineHorizontalRef.current, lineVerticalRef.current], {
+          duration: 0.9,
+          ease: 'Power3.easeOut',
+          opacity: 1
+        });
+      }
 
       requestAnimationFrame(render);
 
@@ -77,31 +83,52 @@ const Crosshair = ({ color = 'white', containerRef = null }) => {
     target.addEventListener('mousemove', onMouseMove);
 
     const primitiveValues = { turbulence: 0 };
+    let tl = null;
 
-    const tl = gsap
-      .timeline({
-        paused: true,
-        onStart: () => {
-          lineHorizontalRef.current.style.filter = `url(#filter-noise-x)`;
-          lineVerticalRef.current.style.filter = `url(#filter-noise-y)`;
-        },
-        onUpdate: () => {
-          filterXRef.current.setAttribute('baseFrequency', primitiveValues.turbulence);
-          filterYRef.current.setAttribute('baseFrequency', primitiveValues.turbulence);
-        },
-        onComplete: () => {
-          lineHorizontalRef.current.style.filter = lineVerticalRef.current.style.filter = 'none';
-        }
-      })
-      .to(primitiveValues, {
-        duration: 0.5,
-        ease: 'power1',
-        startAt: { turbulence: 1 },
-        turbulence: 0
-      });
+    // Create timeline lazily when needed
+    const getTimeline = () => {
+      if (tl) return tl;
+      
+      if (lineHorizontalRef.current && lineVerticalRef.current && filterXRef.current && filterYRef.current) {
+        tl = gsap
+          .timeline({
+            paused: true,
+            onStart: () => {
+              if (lineHorizontalRef.current && lineVerticalRef.current) {
+                lineHorizontalRef.current.style.filter = `url(#filter-noise-x)`;
+                lineVerticalRef.current.style.filter = `url(#filter-noise-y)`;
+              }
+            },
+            onUpdate: () => {
+              if (filterXRef.current && filterYRef.current) {
+                filterXRef.current.setAttribute('baseFrequency', primitiveValues.turbulence);
+                filterYRef.current.setAttribute('baseFrequency', primitiveValues.turbulence);
+              }
+            },
+            onComplete: () => {
+              if (lineHorizontalRef.current && lineVerticalRef.current) {
+                lineHorizontalRef.current.style.filter = lineVerticalRef.current.style.filter = 'none';
+              }
+            }
+          })
+          .to(primitiveValues, {
+            duration: 0.5,
+            ease: 'power1',
+            startAt: { turbulence: 1 },
+            turbulence: 0
+          });
+      }
+      return tl;
+    };
 
-    const enter = () => tl.restart();
-    const leave = () => tl.progress(1).kill();
+    const enter = () => {
+      const timeline = getTimeline();
+      if (timeline) timeline.restart();
+    };
+    const leave = () => {
+      const timeline = getTimeline();
+      if (timeline) timeline.progress(1).kill();
+    };
 
     const render = () => {
       renderedStyles.tx.current = mouse.x;
@@ -115,8 +142,10 @@ const Crosshair = ({ color = 'white', containerRef = null }) => {
         );
       }
 
-      gsap.set(lineVerticalRef.current, { x: renderedStyles.tx.previous });
-      gsap.set(lineHorizontalRef.current, { y: renderedStyles.ty.previous });
+      if (lineVerticalRef.current && lineHorizontalRef.current) {
+        gsap.set(lineVerticalRef.current, { x: renderedStyles.tx.previous });
+        gsap.set(lineHorizontalRef.current, { y: renderedStyles.ty.previous });
+      }
 
       requestAnimationFrame(render);
     };
