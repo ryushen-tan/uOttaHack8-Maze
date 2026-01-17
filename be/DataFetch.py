@@ -1,9 +1,16 @@
 import osmnx as ox
 from matplotlib import pyplot as plt
+from typing import Union
 
 class Location:
-    def __init__(self, place):
-        self.G = ox.graph_from_place(place, network_type='drive')
+    def __init__(self, place: Union[str, list] = None, bounds: list = None):
+        if bounds is not None:
+            min_lat, max_lat, min_lon, max_lon = bounds
+            self.G = ox.graph_from_bbox(max_lat, min_lat, max_lon, min_lon, network_type='drive')
+        elif place is not None:
+            self.G = ox.graph_from_place(place, network_type='drive')
+        else:
+            raise ValueError("Either 'place' or 'bounds' must be provided")
     
     def get_nodes(self) -> list[tuple[float, float]]:
         return [(data['x'], data['y']) for _, data in self.G.nodes.items()]
