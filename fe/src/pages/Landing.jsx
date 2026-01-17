@@ -20,8 +20,8 @@ const Landing = () => {
                 <img className="w-full h-screen absolute z-[0]" src="/aesthetic-snow.gif" alt="Aesthetic snow animation"/>
                 <div className="flex flex-col items-center justify-center h-screen">
                     <ASCIIText
-                        text='Maze'
-                        textFontSize={50}
+                        text='Snowy Day'
+                        textFontSize={40}
                         enableWaves={true}
                         asciiFontSize={4}
                     />
@@ -52,11 +52,11 @@ const Landing = () => {
                 
                 <div className="w-2xl absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
                     <h1 className="w-full" style={{ fontFamily: 'Rubik Pixels, sans-serif' }}>
-                        <Link to="/maze" className="flex items-center justify-center transition-transform duration-300 ease-in-out hover:scale-110">
-                            {'Enter the Maze'.split('').map((char, index) => (
+                        <Link to="/Snow" className="flex items-center justify-center transition-transform duration-300 ease-in-out hover:scale-110">
+                            {'Enter the Snow'.split('').map((char, index) => (
                                 <span
                                     key={index}
-                                    className="inline-block shuffle-letter text-[150px] text-gray-600 font-semibold hover:cursor-pointer hover:text-white"
+                                    className="inline-block shuffle-letter text-[120px] text-gray-600 font-semibold hover:cursor-pointer hover:text-white"
                                     style={{
                                         animationDelay: `${index * 0.1}s`
                                     }}

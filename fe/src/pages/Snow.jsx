@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-const Maze = () => {
+const Snow = () => {
     const [input, setInput] = useState('');
 
     return (
@@ -25,4 +25,4 @@ const Maze = () => {
     );
 };
 
-export default Maze;
+export default Snow;
