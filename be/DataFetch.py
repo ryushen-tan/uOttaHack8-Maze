@@ -1,9 +1,6 @@
 import osmnx as ox
 from matplotlib import pyplot as plt
 from typing import Union
-from Graph import Graph
-from Node import Node
-from Edge import Edge
 
 
 ox.settings.max_query_area_size = 50 * 1000 * 1000  # 50 km² in square meters
