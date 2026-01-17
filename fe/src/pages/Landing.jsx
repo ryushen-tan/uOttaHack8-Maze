@@ -21,7 +21,7 @@ const Landing = () => {
                 <div className="flex flex-col items-center justify-center h-screen">
                     <ASCIIText
                         text='Snowy Day'
-                        textFontSize={40}
+                        textFontSize={35}
                         enableWaves={true}
                         asciiFontSize={4}
                     />
