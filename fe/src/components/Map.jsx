@@ -25,7 +25,7 @@ function MapUpdater({ center }) {
   return null;
 }
 
-export default function Map({ center, onBoundsChange }) {
+export default function Map({ center, onBoundsChange, resetKey }) {
   return (
     <MapContainer
       center={center}
@@ -34,11 +34,11 @@ export default function Map({ center, onBoundsChange }) {
       className="rounded-2xl"
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
       />
       <MapUpdater center={center} />
-      <GetBoundsButton onBoundsChange={onBoundsChange} />
+      <GetBoundsButton onBoundsChange={onBoundsChange} resetKey={resetKey} />
     </MapContainer>
   );
 }

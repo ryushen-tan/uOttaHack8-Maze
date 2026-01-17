@@ -107,7 +107,7 @@ const Snow = () => {
                     </div>
                 ) : (
                     <div className='w-full h-full rounded-2xl overflow-hidden'>
-                        <Map center={mapCenter} />
+                        <Map center={mapCenter} resetKey={mapCenter?.join(',')} />
                     </div>
                 )}
             </div>
