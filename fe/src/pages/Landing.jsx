@@ -56,7 +56,7 @@ const Landing = () => {
                             {'Enter the Maze'.split('').map((char, index) => (
                                 <span
                                     key={index}
-                                    className="inline-block shuffle-letter text-[150px] text-gray-600 font-semibold hover:cursor-pointer hover:text-red-500"
+                                    className="inline-block shuffle-letter text-[150px] text-gray-600 font-semibold hover:cursor-pointer hover:text-white"
                                     style={{
                                         animationDelay: `${index * 0.1}s`
                                     }}
