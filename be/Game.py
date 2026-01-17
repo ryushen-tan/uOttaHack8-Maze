@@ -9,6 +9,7 @@ offset_amount = 35
 scale = 1.0
 print(f"Processing graph for {place}...")
 world = World(Location(place))
+print("Number of Edges: ", len(world.graph.edges))
 print(f"Processing graph complete in {time.time() - start_time} seconds!")
 
 pygame.init()
@@ -32,8 +33,9 @@ def draw_node(node: Node):
 
 def draw_edge(edge: Edge):
     if node_in_scale_range(edge.start) or node_in_scale_range(edge.end):
-        color = "blue" if not edge.clean else "green"
-        pygame.draw.line(screen, color, grid_to_screen(edge.start), grid_to_screen(edge.end), 1)
+        color = ("purple" if edge.oneway else "blue") if not edge.clean else "green"
+        scale = 1 if edge.oneway else 2
+        pygame.draw.line(screen, color, grid_to_screen(edge.start), grid_to_screen(edge.end), scale)
 
 def draw_worker(worker: Worker):
     if node_in_scale_range(worker.position):

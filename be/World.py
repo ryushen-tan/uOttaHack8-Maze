@@ -13,8 +13,9 @@ class World:
         for edge in location.get_edges():
             start = edge[0]
             end = edge[1]
+            oneway = edge[2]
 
-            self.graph.add_edge(Edge(Node(start[0], start[1]), Node(end[0], end[1])))
+            self.graph.add_edge(Edge(Node(start[0], start[1]), Node(end[0], end[1]), oneway))
         
         for _ in range(num_workers):
             self.workers.append(Worker(self.graph))

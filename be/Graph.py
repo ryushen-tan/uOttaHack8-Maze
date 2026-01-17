@@ -32,10 +32,12 @@ class Graph:
     def find_neighbours(self, node: Node) -> set[tuple[Node, Edge]]:
         neighbours = set()
         for edge in self.edges:
+            if not edge.oneway:
+                if edge.end == node:
+                    neighbours.add((edge.start, edge))
+            
             if edge.start == node:
                 neighbours.add((edge.end, edge))
-            elif edge.end == node:
-                neighbours.add((edge.start, edge))
 
         return neighbours
 
