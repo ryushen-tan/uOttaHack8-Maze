@@ -38,6 +38,25 @@ class Graph:
     def relative_position(self, node: Node) -> tuple[float, float]:
         return ((node.x - self.most_left) / self.width(), (node.y - self.most_down) / self.height())
 
+    def to_dict(self):
+        return {
+            'nodes': [{'x': node.x, 'y': node.y} for node in self.nodes],
+            'edges': [
+                {
+                    'start': {'x': edge.start.x, 'y': edge.start.y},
+                    'end': {'x': edge.end.x, 'y': edge.end.y},
+                    'length': edge.length
+                }
+                for edge in self.edges
+            ],
+            'bounds': {
+                'left': self.most_left,
+                'right': self.most_right,
+                'down': self.most_down,
+                'up': self.most_up
+            }
+        }
+
     def __str__(self):
         nodes_str = [str(node) for node in self.nodes]
         edges_str = [str(edge) for edge in self.edges]

@@ -10,7 +10,7 @@ if [ -d "venv" ]; then
     echo "Virtual environment 'venv' already exists. Skipping creation."
 else
     echo "Creating new virtual environment..."
-    python3 -m venv venv
+    python3.11 -m venv venv
     echo "Virtual environment created successfully."
 fi
 

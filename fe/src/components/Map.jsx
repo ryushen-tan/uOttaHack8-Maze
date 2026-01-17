@@ -25,7 +25,7 @@ function MapUpdater({ center }) {
   return null;
 }
 
-export default function Map({ center, onBoundsChange, resetKey }) {
+export default function Map({ center, onBoundsChange, resetKey, hideControls = false, children }) {
   return (
     <MapContainer
       center={center}
@@ -38,7 +38,8 @@ export default function Map({ center, onBoundsChange, resetKey }) {
         url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
       />
       <MapUpdater center={center} />
-      <GetBoundsButton onBoundsChange={onBoundsChange} resetKey={resetKey} />
+      {!hideControls && <GetBoundsButton onBoundsChange={onBoundsChange} resetKey={resetKey} />}
+      {children}
     </MapContainer>
   );
 }
