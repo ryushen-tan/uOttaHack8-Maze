@@ -1,4 +1,9 @@
-from World import World
+from World import World, Location
+import time
 
-world = World(10, 10)
-print(world.graph)
+loc = Location("Ottawa, Canada")
+
+for u, v, k, data in loc.G.edges(keys=True, data=True):
+    print(data)
+    break
+    

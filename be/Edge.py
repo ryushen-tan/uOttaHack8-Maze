@@ -10,7 +10,7 @@ class Edge:
         self.length: float = math.sqrt(math.pow(end.x - start.x, 2)) + math.sqrt(math.pow(end.y - start.y, 2))
 
     def __eq__(self, other):
-        if other is Edge:
+        if isinstance(other, Edge):
             return (self.start == other.start or self.start == other.end) and (self.end == other.start or self.end == other.end)
         return False
 
