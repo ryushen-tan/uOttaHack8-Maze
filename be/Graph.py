@@ -29,6 +29,21 @@ class Graph:
         if node.y > self.most_up:
             self.most_up = node.y
     
+    def find_neighbours(self, node: Node) -> set[tuple[Node, Edge]]:
+        neighbours = set()
+        for edge in self.edges:
+            if not edge.oneway:
+                if edge.end == node:
+                    neighbours.add((edge.start, edge))
+            
+            if edge.start == node:
+                neighbours.add((edge.end, edge))
+
+        return neighbours
+
+    def clean_ratio(self) -> float:
+        return len([e for e in self.edges if e.clean]) / len(self.edges)
+
     def width(self) -> float:
         return self.most_right - self.most_left
     

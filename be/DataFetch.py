@@ -24,18 +24,26 @@ class Location:
     def get_node_position(self, node_data: dict) -> tuple[float, float]:
         return (node_data['x'], node_data['y'])
 
-    def get_edges(self):
+    def get_edges(self) -> list[tuple[tuple[float, float], tuple[float, float], bool]]:
         edges = self.G.edges(keys=True, data=True)
-        return [(self.get_node_position(self.G.nodes[u]), self.get_node_position(self.G.nodes[v])) for u, v, _, _ in edges]
+
+        graph_edges = []
+        for u, v, _, data in edges:
+            oneway = True
+            if 'oneway' in data.keys() and isinstance(data['oneway'], bool):
+                oneway = data['oneway']
+            graph_edges.append((self.get_node_position(self.G.nodes[u]), self.get_node_position(self.G.nodes[v]), oneway))
+        
+        return graph_edges
     
     def plot_location(self):
         edges = self.get_edges()
 
         for edge in edges:
-            start, end = edge
+            start, end, oneway = edge
             x = (start[0], end[0])
             y = (start[1], end[1])
-            plt.plot(x, y, color='blue')
+            plt.plot(x, y, color= "red" if oneway else "blue")
 
         plt.grid(True)
         plt.show()

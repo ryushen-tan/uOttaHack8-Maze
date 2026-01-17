@@ -8,7 +8,7 @@ class Node:
         return self.x, self.y
 
     def __eq__(self, other):
-        if other is Node:
+        if isinstance(other, Node):
             return self.x == other.x and self.y == other.y
         return False
 

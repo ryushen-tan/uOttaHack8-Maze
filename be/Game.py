@@ -1,48 +1,83 @@
 import pygame
-from World import World, Node, Edge, Location, Graph
+from World import World, Node, Edge, Location, Graph, Worker
 import time
 
 start_time = time.time()
-place = "New York City, NY, USA"
+place = "Orleans, Ontario, Canada"
+offset = (0.0, 0.0)
+offset_amount = 35
+scale = 1.0
 print(f"Processing graph for {place}...")
 world = World(Location(place))
+print("Number of Edges: ", len(world.graph.edges))
 print(f"Processing graph complete in {time.time() - start_time} seconds!")
-print((world.graph.width(), world.graph.height()))
 
 pygame.init()
 screen = pygame.display.set_mode((1280, 720))
-scale = 1.0
 clock = pygame.time.Clock()
 running = True
 dt = 0
 
 def grid_to_screen(node: Node) -> tuple[float, float]:
     relative_pos = world.graph.relative_position(node)
-    return ((relative_pos[0]) * screen.get_width(), (1 - relative_pos[1]) * screen.get_height())
+    return (((relative_pos[0]) * screen.get_width() * scale) - (offset[0] * scale), ((1 - relative_pos[1]) * screen.get_height() * scale) - (offset[1] * scale))
 
+def node_in_scale_range(node: Node) -> bool:
+    relative_pos = world.graph.relative_position(node)
+    return (offset[0] / screen.get_width()) <= relative_pos[0] <= (offset[0] / screen.get_width()) + (1 / scale) and (offset[1] / screen.get_height()) <= 1 - relative_pos[1] <= (offset[1] / screen.get_height()) + (1 / scale)
 
 def draw_node(node: Node):
-    pygame.draw.circle(screen, "white", grid_to_screen(node), 1)
+    if node_in_scale_range(node):
+        pygame.draw.circle(screen, "white", grid_to_screen(node), 1)
 
 
 def draw_edge(edge: Edge):
-    pygame.draw.line(screen, "blue", grid_to_screen(edge.start), grid_to_screen(edge.end), 1)
+    if node_in_scale_range(edge.start) or node_in_scale_range(edge.end):
+        color = ("purple" if edge.oneway else "blue") if not edge.clean else "green"
+        scale = 1 if edge.oneway else 2
+        pygame.draw.line(screen, color, grid_to_screen(edge.start), grid_to_screen(edge.end), scale)
 
-def draw_graph(graph: Graph):
-    for e in graph.edges:
+def draw_worker(worker: Worker):
+    if node_in_scale_range(worker.position):
+        pygame.draw.circle(screen, "red", grid_to_screen(worker.position), 3)
+
+def draw_world(world: World):
+    for e in world.graph.edges:
         draw_edge(e)
 
-    for n in graph.nodes:
+    for n in world.graph.nodes:
         draw_node(n)
+    
+    for w in world.workers:
+        draw_worker(w)
 
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_p:
+                scale *= 2
+                offset_amount /= 2
+            elif event.key == pygame.K_o:
+                scale /= 2
+                offset_amount *= 2
+            elif event.key == pygame.K_RIGHT:
+                offset = (offset[0] + offset_amount, offset[1])
+            elif event.key == pygame.K_LEFT:
+                offset = (offset[0] - offset_amount, offset[1])
+            elif event.key == pygame.K_UP:
+                offset = (offset[0], offset[1] - offset_amount)
+            elif event.key == pygame.K_DOWN:
+                offset = (offset[0], offset[1] + offset_amount)
 
     screen.fill("black")
 
-    draw_graph(world.graph)
+    world.play()
+    draw_world(world)
+
+    running = not world.is_finished()
+    pygame.display.set_caption(f'Clean: %{world.graph.clean_ratio() * 100}')
 
     pygame.display.flip()
     dt = clock.tick(60) / 1000

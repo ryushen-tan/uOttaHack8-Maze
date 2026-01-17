@@ -1,4 +1,5 @@
-from World import World
+from World import World, Location
 
-world = World(10, 10)
-print(world.graph)
+loc = Location("Kanata, Ontario, Canada")
+loc.plot_location()
+    
