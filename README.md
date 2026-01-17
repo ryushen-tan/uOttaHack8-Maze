@@ -1,2 +1,2 @@
-# uOttaHack8-Snow
+# uOttaHack8-Snowy Day
 
