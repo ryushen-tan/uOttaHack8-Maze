@@ -1,12 +1,14 @@
 import math
 
 from Node import Node
+from Location import RoadPriority
 
 class Edge:
-    def __init__(self, start: Node, end: Node, oneway: bool = True):
+    def __init__(self, start: Node, end: Node, oneway: bool = True, priority: RoadPriority = RoadPriority.UNCLASSIFIED):
         self.start = start
         self.end = end
         self.oneway = oneway
+        self.priority = priority
         self.clean = False
         self.length: float = math.sqrt(math.pow(end.x - start.x, 2)) + math.sqrt(math.pow(end.y - start.y, 2))
 

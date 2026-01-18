@@ -14,7 +14,7 @@ import json
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from DataFetch import Location
+from Location import Location
 from World import World
 
 ox.settings.use_cache = True
