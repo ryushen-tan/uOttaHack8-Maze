@@ -60,7 +60,8 @@ class Graph:
                 {
                     'start': {'x': edge.start.x, 'y': edge.start.y},
                     'end': {'x': edge.end.x, 'y': edge.end.y},
-                    'length': edge.length
+                    'length': edge.length,
+                    'clean': edge.clean
                 }
                 for edge in self.edges
             ],
@@ -71,6 +72,10 @@ class Graph:
                 'up': self.most_up
             }
         }
+    
+    def get_workers_dict(self, workers):
+        """Serialize worker positions to a list of dictionaries."""
+        return [{'x': worker.position.x, 'y': worker.position.y} for worker in workers]
 
     def __str__(self):
         nodes_str = [str(node) for node in self.nodes]
