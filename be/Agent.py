@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 import random
 from collections import deque
+import os
 
 class DQNAgent:
     def __init__(
@@ -30,6 +31,9 @@ class DQNAgent:
         self.device = device
 
         self.q_net = self._build_net().to(device)
+        if os.path.exists('model_eval.pth'):
+            self.q_net.load_state_dict(torch.load("model_eval.pth"))
+            print("Model Loaded!")
         self.target_net = self._build_net().to(device)
         self.target_net.load_state_dict(self.q_net.state_dict())
         self.target_net.eval()
@@ -88,3 +92,6 @@ class DQNAgent:
             self.target_net.load_state_dict(self.q_net.state_dict())
 
         self.epsilon = max(self.epsilon * self.epsilon_decay, self.epsilon_min)
+
+        torch.save(self.q_net.state_dict(), "model_eval.pth")
+    
