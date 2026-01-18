@@ -14,42 +14,24 @@ html, body {
   width: 100%;
 }
 
-@keyframes shuffle {
+@keyframes wave {
   0%, 100% {
-    transform: translate(0, 0) rotate(0deg);
+    transform: translateY(0);
   }
-  10% {
-    transform: translate(-2px, -3px) rotate(-2deg);
-  }
-  20% {
-    transform: translate(2px, 3px) rotate(2deg);
-  }
-  30% {
-    transform: translate(-3px, 2px) rotate(-1deg);
-  }
-  40% {
-    transform: translate(3px, -2px) rotate(1deg);
+  25% {
+    transform: translateY(-20px);
   }
   50% {
-    transform: translate(-1px, 3px) rotate(-2deg);
+    transform: translateY(0);
   }
-  60% {
-    transform: translate(1px, -3px) rotate(2deg);
-  }
-  70% {
-    transform: translate(-2px, 1px) rotate(-1deg);
-  }
-  80% {
-    transform: translate(2px, -1px) rotate(1deg);
-  }
-  90% {
-    transform: translate(-1px, -2px) rotate(-1deg);
+  75% {
+    transform: translateY(10px);
   }
 }
 
 .shuffle-letter {
   display: inline-block;
-  animation: shuffle 2s ease-in-out infinite;
+  animation: wave 2s ease-in-out infinite;
 }
 
 @keyframes fade-loading {

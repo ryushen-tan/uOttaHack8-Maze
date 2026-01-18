@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
 import Map from '../components/Map';
 import GraphOverlay from '../components/GraphOverlay';
+import PixelSnow from '../components/PixelSnow';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
 
@@ -179,6 +180,7 @@ const Snow = () => {
 
             {!locationSelected && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[20000] p-4">
+                    <PixelSnow />
                     <div 
                         className="backdrop-blur-md bg-white/10 border-2 border-white/20 rounded-3xl shadow-2xl p-8 w-full max-w-2xl relative"
                         ref={suggestionsRef}
