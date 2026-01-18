@@ -61,7 +61,7 @@ const getPriorityName = (priority) => {
   }
 };
 
-function GraphOverlay({ graphData, mapBounds, numWorkers, onProgressUpdate }) {
+function GraphOverlay({ graphData, mapBounds, numWorkers, onProgressUpdate, evalMode = false }) {
   const map = useMap();
   const canvasRef = useRef(null);
   const [liveData, setLiveData] = useState(null);
@@ -120,7 +120,8 @@ function GraphOverlay({ graphData, mapBounds, numWorkers, onProgressUpdate }) {
       socket.emit('start_simulation', {
         bounds: mapBounds.osmnxFormat,
         num_workers: numWorkers,
-        session_id: sessionId
+        session_id: sessionId,
+        eval_mode: evalMode
       });
     });
 
@@ -158,7 +159,7 @@ function GraphOverlay({ graphData, mapBounds, numWorkers, onProgressUpdate }) {
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [graphData, mapBounds, numWorkers, onProgressUpdate]);
+  }, [graphData, mapBounds, numWorkers, onProgressUpdate, evalMode]);
 
   useEffect(() => {
     if (!graphData || !mapBounds || !canvasRef.current) return;
@@ -329,10 +330,12 @@ function GraphOverlay({ graphData, mapBounds, numWorkers, onProgressUpdate }) {
         </button>
       )}
       {showTraining && trainingMetrics && (
-        <div className="absolute top-4 left-4 bg-black/80 backdrop-blur-md border-2 border-white/20 text-white rounded-xl p-4 z-[2000] min-w-[220px]">
+        <div className={`absolute top-4 left-4 backdrop-blur-md border-2 text-white rounded-xl p-4 z-[2000] min-w-[220px] ${
+          trainingMetrics.eval_mode ? 'bg-cyan-900/80 border-cyan-400/30' : 'bg-black/80 border-white/20'
+        }`}>
           <div className="flex items-center justify-between mb-3">
             <div className="text-sm font-bold" style={{ fontFamily: 'Rubik Pixels, sans-serif' }}>
-              DQN Training
+              {trainingMetrics.eval_mode ? 'DQN Evaluation' : 'DQN Training'}
             </div>
             <button
               onClick={() => setShowTraining(false)}
@@ -347,30 +350,37 @@ function GraphOverlay({ graphData, mapBounds, numWorkers, onProgressUpdate }) {
               <span className="text-white/60">Steps:</span>
               <span>{trainingMetrics.step_count?.toLocaleString() || 0}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-white/60">Epsilon:</span>
-              <span>{trainingMetrics.epsilon?.toFixed(4) || '1.0000'}</span>
-            </div>
+            {!trainingMetrics.eval_mode && (
+              <div className="flex justify-between">
+                <span className="text-white/60">Epsilon:</span>
+                <span>{trainingMetrics.epsilon?.toFixed(4) || '1.0000'}</span>
+              </div>
+            )}
             <div className="flex justify-between">
               <span className="text-white/60">Total Reward:</span>
               <span className={trainingMetrics.total_reward >= 0 ? 'text-green-400' : 'text-red-400'}>
                 {trainingMetrics.total_reward?.toLocaleString() || 0}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-white/60">Replay Buffer:</span>
-              <span>{trainingMetrics.replay_size?.toLocaleString() || 0}</span>
-            </div>
-            {trainingMetrics.last_loss > 0 && (
-              <div className="flex justify-between">
-                <span className="text-white/60">Loss:</span>
-                <span>{trainingMetrics.last_loss?.toFixed(4)}</span>
-              </div>
+            {!trainingMetrics.eval_mode && (
+              <>
+                <div className="flex justify-between">
+                  <span className="text-white/60">Replay Buffer:</span>
+                  <span>{trainingMetrics.replay_size?.toLocaleString() || 0}</span>
+                </div>
+                {trainingMetrics.last_loss > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-white/60">Loss:</span>
+                    <span>{trainingMetrics.last_loss?.toFixed(4)}</span>
+                  </div>
+                )}
+              </>
             )}
           </div>
           <div className="mt-3 pt-3 border-t border-white/20">
             <div className="text-xs text-white/40" style={{ fontFamily: 'Rubik Pixels, sans-serif' }}>
-              {trainingMetrics.epsilon > 0.5 ? 'Exploring...' : 
+              {trainingMetrics.eval_mode ? 'Exploiting (Eval)' :
+               trainingMetrics.epsilon > 0.5 ? 'Exploring...' : 
                trainingMetrics.epsilon > 0.1 ? 'Learning...' : 'Exploiting!'}
             </div>
           </div>

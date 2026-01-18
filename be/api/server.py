@@ -161,12 +161,14 @@ def handle_start_simulation(data):
             active_sessions[client_sid].stop()
             del active_sessions[client_sid]
         
-        print(f"Starting DQN training simulation for session {session_id} with {num_workers} workers")
+        eval_mode = data.get('eval_mode', False)
+        mode_str = "evaluation" if eval_mode else "training"
+        print(f"Starting DQN {mode_str} simulation for session {session_id} with {num_workers} workers")
         
         location = Location(bounds=bounds)
         world = World(location, num_workers)
         
-        training_session = TrainingSession(world, session_id, num_workers)
+        training_session = TrainingSession(world, session_id, num_workers, eval_mode=eval_mode)
         active_sessions[client_sid] = training_session
         
         initial_state = training_session.get_initial_state()

@@ -18,10 +18,11 @@ def compute_state_dim():
 class TrainingSession:
     """Thread-safe manager for a single DQN training session."""
 
-    def __init__(self, world, session_id, num_workers):
+    def __init__(self, world, session_id, num_workers, eval_mode=False):
         self.world = world
         self.session_id = session_id
         self.num_workers = num_workers
+        self.eval_mode = eval_mode
         self.is_running = False
         self.is_paused = False
         self.lock = threading.Lock()
@@ -44,6 +45,9 @@ class TrainingSession:
             buffer_size=TRAINING_BUFFER_SIZE
         )
 
+        if eval_mode:
+            self.agent.epsilon = 0.0
+
         for worker in self.world.workers:
             worker.setup_worker()
 
@@ -61,8 +65,9 @@ class TrainingSession:
                 action = self.agent.act(worker.state)
                 next_state, reward, done = worker.play(action)
 
-                self.agent.remember(worker.state, action, reward, next_state, done)
-                self.agent.train()
+                if not self.eval_mode:
+                    self.agent.remember(worker.state, action, reward, next_state, done)
+                    self.agent.train()
 
                 worker.state = worker.get_state()
                 step_reward += reward
@@ -124,5 +129,6 @@ class TrainingSession:
             'episode': self.episode,
             'total_reward': self.total_reward,
             'step_count': self.step_count,
+            'eval_mode': self.eval_mode,
             **agent_metrics
         }

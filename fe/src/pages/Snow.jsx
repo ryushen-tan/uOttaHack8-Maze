@@ -19,6 +19,7 @@ const Snow = () => {
     const [showGraph, setShowGraph] = useState(false);
     const [numWorkers, setNumWorkers] = useState(10);
     const [simulationStarted, setSimulationStarted] = useState(false);
+    const [evalMode, setEvalMode] = useState(false);
     const suggestionsRef = useRef(null);
     const debounceTimer = useRef(null);
 
@@ -151,7 +152,8 @@ const Snow = () => {
                                 <GraphOverlay 
                                     graphData={graphData} 
                                     mapBounds={mapBounds} 
-                                    numWorkers={simulationStarted ? numWorkers : null} 
+                                    numWorkers={simulationStarted ? numWorkers : null}
+                                    evalMode={evalMode}
                                 />
                             )}
                         </Map>
@@ -256,15 +258,36 @@ const Snow = () => {
                             style={{ fontFamily: 'Rubik Pixels, sans-serif' }}
                         />
                         <button
-                            onClick={() => setSimulationStarted(!simulationStarted)}
+                            onClick={() => {
+                                if (!simulationStarted) {
+                                    setEvalMode(false);
+                                }
+                                setSimulationStarted(!simulationStarted);
+                            }}
                             className={`px-6 py-3 rounded-xl font-bold transition-all border-2 ${
-                                simulationStarted 
+                                simulationStarted && !evalMode
                                     ? 'bg-red-500/80 hover:bg-red-500 border-red-400/50' 
                                     : 'bg-pink-500/80 hover:bg-pink-500 border-pink-400/50'
                             } text-white`}
                             style={{ fontFamily: 'Rubik Pixels, sans-serif' }}
                         >
-                            {simulationStarted ? 'Stop Training' : 'Start Training'}
+                            {simulationStarted && !evalMode ? 'Stop Training' : 'Start Training'}
+                        </button>
+                        <button
+                            onClick={() => {
+                                if (!simulationStarted) {
+                                    setEvalMode(true);
+                                }
+                                setSimulationStarted(!simulationStarted);
+                            }}
+                            className={`px-6 py-3 rounded-xl font-bold transition-all border-2 ${
+                                simulationStarted && evalMode
+                                    ? 'bg-red-500/80 hover:bg-red-500 border-red-400/50' 
+                                    : 'bg-cyan-500/80 hover:bg-cyan-500 border-cyan-400/50'
+                            } text-white`}
+                            style={{ fontFamily: 'Rubik Pixels, sans-serif' }}
+                        >
+                            {simulationStarted && evalMode ? 'Stop Eval' : 'Start Eval'}
                         </button>
                     </div>
                 </div>
