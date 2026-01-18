@@ -95,7 +95,7 @@ class Graph:
         return f'nodes: {str(nodes_str)}\nedges: {str(edges_str)}'
 
     def graph_to_csv(self, file_name: str = 'graph_export.csv') -> str:
-        folder_name = "csv"
+        folder_name = "cached_graphs"
 
         if not os.path.exists(folder_name):
             os.makedirs(folder_name)
