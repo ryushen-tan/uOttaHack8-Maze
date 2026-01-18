@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Exit on error
-set -e
+set +e
 
 echo "Setting up Python virtual environment..."
 
