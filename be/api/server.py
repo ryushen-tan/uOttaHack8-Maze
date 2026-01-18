@@ -19,7 +19,7 @@ from World import World
 
 ox.settings.use_cache = True
 ox.settings.log_console = False
-ox.settings.max_query_area_size = 25 * 1000 * 1000
+# ox.settings.max_query_area_size = 25 * 1000 * 1000
 
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
@@ -85,7 +85,7 @@ def get_graph():
         lon_meters = lon_diff * 111000 * math.cos(math.radians(avg_lat))
         geographic_area_km2 = (lat_meters * lon_meters) / 1000000
         
-        MAX_AREA_KM2 = 25
+        MAX_AREA_KM2 = 100000
         if projected_area_km2 > MAX_AREA_KM2:
             return jsonify({
                 'error': f'Area too large ({geographic_area_km2:.2f} km² geographic, {projected_area_km2:.2f} km² projected). Maximum allowed: {MAX_AREA_KM2} km². Please zoom in more on the map.',
@@ -151,7 +151,7 @@ def handle_start_simulation(data):
         emit('initial_state', initial_state)
         
         def run_simulation():
-            update_interval = 0.8
+            update_interval = 1.2  # Increased from 0.8 to reduce network traffic and improve performance
             last_update = time.time()
             
             while not world.is_finished():
