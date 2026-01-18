@@ -2,9 +2,7 @@ from Node import Node
 from Edge import Edge
 
 import csv
-import io
 
-import unittest
 import os
 
 from Location import RoadPriority
@@ -86,16 +84,12 @@ class Graph:
         return f'nodes: {str(nodes_str)}\nedges: {str(edges_str)}'
 
     def graph_to_csv(self, file_name: str = 'graph_export.csv') -> str:
-        print("exporting graph to csv...")
-
         folder_name = "csv"
 
         if not os.path.exists(folder_name):
             os.makedirs(folder_name)
         
         full_path = os.path.join(folder_name, file_name)
-        
-        print(f"exporting graph to {full_path}...")
 
         with open(full_path, 'w', newline='') as f:
             writer = csv.writer(f)
@@ -109,7 +103,6 @@ class Graph:
                     edge.clean, edge.priority.value, edge.oneway
                 ])
     
-
     def csv_to_graph(self, file_path: str):
         print("loading graph from csv...")
 
