@@ -17,6 +17,9 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from Location import Location
 from World import World
 
+# Import constants from the same directory
+from constants import SIMULATION_UPDATE_INTERVAL, SIMULATION_STEP_DELAY
+
 ox.settings.use_cache = True
 ox.settings.log_console = False
 # ox.settings.max_query_area_size = 25 * 1000 * 1000
@@ -30,8 +33,17 @@ cache_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file_
 os.makedirs(cache_dir, exist_ok=True)
 
 def get_cache_key(bounds):
-    bounds_str = json.dumps(bounds, sort_keys=True)
-    return hashlib.md5(bounds_str.encode()).hexdigest()
+    # Ensure bounds are properly formatted with full precision
+    if not bounds or len(bounds) != 4:
+        raise ValueError(f"Invalid bounds format: {bounds}")
+    
+    # Round to 6 decimal places (about 0.1m precision) to avoid floating point precision issues
+    # but keep enough precision to distinguish different locations
+    rounded_bounds = [round(float(b), 6) for b in bounds]
+    bounds_str = json.dumps(rounded_bounds, sort_keys=True)
+    cache_key = hashlib.md5(bounds_str.encode()).hexdigest()
+    
+    return cache_key
 
 def get_cached_graph(bounds):
     cache_key = get_cache_key(bounds)
@@ -39,11 +51,14 @@ def get_cached_graph(bounds):
     
     if os.path.exists(cache_file):
         try:
+            print(f"Cache hit! Using cache file: {cache_key}.json for bounds: {bounds}")
             with open(cache_file, 'r') as f:
                 return json.load(f)
         except (IOError, json.JSONDecodeError) as e:
             print(f"Cache read error: {e}")
             pass
+    else:
+        print(f"Cache miss! No cache file found for bounds: {bounds} (cache key: {cache_key})")
     return None
 
 def cache_graph(bounds, graph_dict):
@@ -53,6 +68,8 @@ def cache_graph(bounds, graph_dict):
     try:
         with open(cache_file, 'w') as f:
             json.dump(graph_dict, f)
+        print(f"Graph cached successfully to: {cache_key}.json for bounds: {bounds}")
+        print(f"Cache file size: {os.path.getsize(cache_file) / 1024 / 1024:.2f} MB")
     except (IOError, OSError) as e:
         print(f"Cache write error: {e}")
         pass
@@ -65,6 +82,7 @@ def get_graph():
             return jsonify({'error': 'No JSON data received'}), 400
             
         bounds = data.get('bounds')
+        force_refresh = data.get('force_refresh', False)  # Allow forcing cache refresh
         
         if not bounds or len(bounds) != 4:
             return jsonify({'error': f'Invalid bounds. Expected [min_lat, max_lat, min_lon, max_lon], got: {bounds}'}), 400
@@ -94,12 +112,17 @@ def get_graph():
                 'max_allowed': MAX_AREA_KM2
             }), 400
         
-        cached_result = get_cached_graph(bounds)
-        if cached_result:
-            print(f"Returning cached graph for bounds: {bounds}")
-            return jsonify(cached_result)
+        # Check cache unless force_refresh is True
+        if not force_refresh:
+            cached_result = get_cached_graph(bounds)
+            if cached_result:
+                print(f"Returning cached graph for bounds: {bounds}")
+                return jsonify(cached_result)
+        else:
+            print(f"Force refresh requested - bypassing cache for bounds: {bounds}")
         
-        print(f"Fetching graph for bounds: {bounds} (Geographic area: {geographic_area_km2:.2f} km², Projected area: {projected_area_km2:.2f} km²)")
+        print(f"Fetching NEW graph for bounds: {bounds} (Geographic area: {geographic_area_km2:.2f} km², Projected area: {projected_area_km2:.2f} km²)")
+        print(f"Bounds details: min_lat={min_lat}, max_lat={max_lat}, min_lon={min_lon}, max_lon={max_lon}")
         start_time = time.time()
         
         location = Location(bounds=bounds)
@@ -110,7 +133,6 @@ def get_graph():
         
         result = graph.to_dict()
         cache_graph(bounds, result)
-        print("Graph cached successfully")
         
         return jsonify(result)
         
@@ -151,7 +173,7 @@ def handle_start_simulation(data):
         emit('initial_state', initial_state)
         
         def run_simulation():
-            update_interval = 1.2  # Increased from 0.8 to reduce network traffic and improve performance
+            update_interval = SIMULATION_UPDATE_INTERVAL
             last_update = time.time()
             
             while not world.is_finished():
@@ -172,7 +194,7 @@ def handle_start_simulation(data):
                     socketio.emit('update', update_data, room=client_sid)
                     last_update = current_time
                 
-                time.sleep(0.1)
+                time.sleep(SIMULATION_STEP_DELAY)
             
             graph_dict = graph.to_dict()
             workers_list = graph.get_workers_dict(world.workers)
