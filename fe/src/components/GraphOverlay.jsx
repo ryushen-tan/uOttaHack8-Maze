@@ -5,6 +5,62 @@ import { toast } from 'react-toastify';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
 
+// Road priority enum values (matching backend)
+const RoadPriority = {
+  MOTORWAY_LINK: 0,
+  MOTORWAY: 0,
+  TRUNK: 1,
+  PRIMARY: 2,
+  SECONDARY: 3,
+  TERTIARY: 4,
+  RESIDENTIAL: 5,
+  UNCLASSIFIED: 6
+};
+
+// Priority color mapping (matching Game.py)
+const getPriorityColor = (priority) => {
+  switch (priority) {
+    case RoadPriority.MOTORWAY_LINK:
+    case RoadPriority.MOTORWAY:
+      return '#8B0000'; // Dark red
+    case RoadPriority.TRUNK:
+      return '#FF0000'; // Red
+    case RoadPriority.PRIMARY:
+      return '#FF8C00'; // Dark orange
+    case RoadPriority.SECONDARY:
+      return '#FFD700'; // Gold
+    case RoadPriority.TERTIARY:
+      return '#87CEEB'; // Sky blue
+    case RoadPriority.RESIDENTIAL:
+    case RoadPriority.UNCLASSIFIED:
+      return '#D3D3D3'; // Light gray
+    default:
+      return '#D3D3D3'; // Light gray
+  }
+};
+
+const getPriorityName = (priority) => {
+  switch (priority) {
+    case RoadPriority.MOTORWAY_LINK:
+    case RoadPriority.MOTORWAY:
+      return 'Motorway';
+    case RoadPriority.TRUNK:
+      return 'Trunk';
+    case RoadPriority.PRIMARY:
+      return 'Primary';
+    case RoadPriority.SECONDARY:
+      return 'Secondary';
+    case RoadPriority.TERTIARY:
+      return 'Tertiary';
+    case RoadPriority.RESIDENTIAL:
+      return 'Residential';
+    case RoadPriority.UNCLASSIFIED:
+      return 'Unclassified';
+    default:
+      return 'Unknown';
+  }
+};
+
 function GraphOverlay({ graphData, mapBounds, numWorkers, onProgressUpdate }) {
   const map = useMap();
   const canvasRef = useRef(null);
@@ -12,6 +68,7 @@ function GraphOverlay({ graphData, mapBounds, numWorkers, onProgressUpdate }) {
   const [progress, setProgress] = useState(0);
   const socketRef = useRef(null);
   const imageRef = useRef(null);
+  const [showLegend, setShowLegend] = useState(true);
 
   const mergeLiveData = (prev, data) => {
     if (!prev) {
@@ -136,15 +193,19 @@ function GraphOverlay({ graphData, mapBounds, numWorkers, onProgressUpdate }) {
         const start = latLonToPixel(edge.start.y, edge.start.x);
         const end = latLonToPixel(edge.end.y, edge.end.x);
         
+        // Use green for cleaned roads, otherwise use priority color
         if (edge.clean) {
           ctx.strokeStyle = '#00ff00';
           ctx.shadowColor = '#00ff00';
         } else {
-          ctx.strokeStyle = '#00ffff';
-          ctx.shadowColor = '#00ffff';
+          const priority = edge.priority !== undefined ? edge.priority : RoadPriority.UNCLASSIFIED;
+          const color = getPriorityColor(priority);
+          ctx.strokeStyle = color;
+          ctx.shadowColor = color;
         }
         
-        ctx.lineWidth = 2;
+        // Thinner line for oneway roads, thicker for bidirectional
+        ctx.lineWidth = edge.oneway ? 1.5 : 2.5;
         ctx.beginPath();
         ctx.moveTo(start.x, start.y);
         ctx.lineTo(end.x, end.y);
@@ -187,6 +248,24 @@ function GraphOverlay({ graphData, mapBounds, numWorkers, onProgressUpdate }) {
     };
   }, [graphData, mapBounds, map, liveData]);
 
+  // Get unique priorities for legend
+  const getUniquePriorities = () => {
+    const dataToRender = liveData || graphData;
+    if (!dataToRender || !dataToRender.edges) return [];
+    
+    const priorities = new Set();
+    dataToRender.edges.forEach(edge => {
+      if (edge.priority !== undefined) {
+        priorities.add(edge.priority);
+      }
+    });
+    
+    // Return sorted priorities (0-6)
+    return Array.from(priorities).sort((a, b) => a - b);
+  };
+
+  const uniquePriorities = getUniquePriorities();
+
   return (
     <>
       <canvas
@@ -206,6 +285,50 @@ function GraphOverlay({ graphData, mapBounds, numWorkers, onProgressUpdate }) {
             />
           </div>
         </div>
+      )}
+      {showLegend && uniquePriorities.length > 0 && (
+        <div className="absolute bottom-4 left-4 bg-black/80 backdrop-blur-md border-2 border-white/20 text-white rounded-xl p-4 z-[2000] max-w-[250px]">
+          <div className="flex items-center justify-between mb-3">
+            <div className="text-sm font-bold" style={{ fontFamily: 'Rubik Pixels, sans-serif' }}>
+              Road Priority
+            </div>
+            <button
+              onClick={() => setShowLegend(false)}
+              className="text-white/60 hover:text-white transition-colors text-lg"
+              style={{ fontFamily: 'Rubik Pixels, sans-serif' }}
+            >
+              ×
+            </button>
+          </div>
+          <div className="space-y-2">
+            {uniquePriorities.map(priority => (
+              <div key={priority} className="flex items-center gap-2">
+                <div
+                  className="w-6 h-1.5 rounded"
+                  style={{ backgroundColor: getPriorityColor(priority) }}
+                />
+                <span className="text-xs" style={{ fontFamily: 'Rubik Pixels, sans-serif' }}>
+                  {getPriorityName(priority)}
+                </span>
+              </div>
+            ))}
+            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/20">
+              <div className="w-6 h-1.5 rounded bg-green-500" />
+              <span className="text-xs" style={{ fontFamily: 'Rubik Pixels, sans-serif' }}>
+                Cleaned
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+      {!showLegend && (
+        <button
+          onClick={() => setShowLegend(true)}
+          className="absolute bottom-4 left-4 bg-black/80 backdrop-blur-md border-2 border-white/20 text-white rounded-xl px-3 py-2 z-[2000] hover:bg-black/90 transition-colors"
+          style={{ fontFamily: 'Rubik Pixels, sans-serif' }}
+        >
+          Show Legend
+        </button>
       )}
     </>
   );

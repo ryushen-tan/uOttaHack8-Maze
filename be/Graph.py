@@ -81,7 +81,9 @@ class Graph:
                     'start': {'x': edge.start.x, 'y': edge.start.y},
                     'end': {'x': edge.end.x, 'y': edge.end.y},
                     'length': edge.length,
-                    'clean': edge.clean
+                    'clean': edge.clean,
+                    'priority': edge.priority.value,
+                    'oneway': edge.oneway
                 }
                 for edge in self.edges
             ],

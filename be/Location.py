@@ -41,6 +41,8 @@ class Location:
         graph_edges = []
         for u, v, _, data in edges:
             oneway = True
+            road_type = RoadPriority.UNCLASSIFIED  # Default priority
+            
             if 'oneway' in data and isinstance(data['oneway'], bool):
                 oneway = data['oneway']
 
