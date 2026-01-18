@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMap } from 'react-leaflet';
 import { io } from 'socket.io-client';
+import { toast } from 'react-toastify';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
 
 function GraphOverlay({ graphData, mapBounds, numWorkers, onProgressUpdate }) {
   const map = useMap();
@@ -10,11 +13,31 @@ function GraphOverlay({ graphData, mapBounds, numWorkers, onProgressUpdate }) {
   const socketRef = useRef(null);
   const imageRef = useRef(null);
 
+  const mergeLiveData = (prev, data) => {
+    if (!prev) {
+      return {
+        ...graphData,
+        workers: data.workers || [],
+        edges: data.edges || graphData.edges,
+        progress: data.progress !== undefined ? data.progress : 0
+      };
+    }
+    return {
+      ...prev,
+      workers: data.workers !== undefined ? data.workers : prev.workers,
+      edges: data.edges !== undefined ? data.edges : prev.edges,
+      progress: data.progress !== undefined ? data.progress : prev.progress
+    };
+  };
+
   useEffect(() => {
     const img = new Image();
     img.src = '/snow_plow.png';
     img.onload = () => {
       imageRef.current = img;
+    };
+    img.onerror = () => {
+      console.warn('Failed to load snow plow image');
     };
   }, []);
 
@@ -27,7 +50,7 @@ function GraphOverlay({ graphData, mapBounds, numWorkers, onProgressUpdate }) {
       return;
     }
 
-    const socket = io('http://127.0.0.1:5000');
+    const socket = io(API_URL);
     socketRef.current = socket;
 
     const sessionId = `session_${Date.now()}`;
@@ -50,53 +73,25 @@ function GraphOverlay({ graphData, mapBounds, numWorkers, onProgressUpdate }) {
 
     socket.on('update', (data) => {
       console.log('Received update:', data);
-      setLiveData(prev => {
-        if (!prev) {
-          return {
-            ...graphData,
-            workers: data.workers || [],
-            edges: data.edges || graphData.edges,
-            progress: data.progress !== undefined ? data.progress : 0
-          };
-        }
-        return {
-          ...prev,
-          workers: data.workers !== undefined ? data.workers : prev.workers,
-          edges: data.edges !== undefined ? data.edges : prev.edges,
-          progress: data.progress !== undefined ? data.progress : prev.progress
-        };
-      });
+      setLiveData(prev => mergeLiveData(prev, data));
       setProgress(data.progress || 0);
       if (onProgressUpdate) onProgressUpdate(data.progress || 0);
     });
 
     socket.on('final_state', (data) => {
-      setLiveData(prev => {
-        if (!prev) {
-          return {
-            ...graphData,
-            workers: data.workers || [],
-            edges: data.edges || graphData.edges,
-            progress: 1.0
-          };
-        }
-        return {
-          ...prev,
-          workers: data.workers !== undefined ? data.workers : prev.workers,
-          edges: data.edges !== undefined ? data.edges : prev.edges,
-          progress: 1.0
-        };
-      });
+      setLiveData(prev => mergeLiveData(prev, { ...data, progress: 1.0 }));
       setProgress(1.0);
       if (onProgressUpdate) onProgressUpdate(1.0);
     });
 
     socket.on('error', (data) => {
       console.error('WebSocket error:', data);
+      toast.error(data.message || 'WebSocket connection error');
     });
 
     return () => {
       socket.disconnect();
+      socketRef.current = null;
     };
   }, [graphData, mapBounds, numWorkers, onProgressUpdate]);
 

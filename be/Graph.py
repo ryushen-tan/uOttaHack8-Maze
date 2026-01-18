@@ -42,6 +42,8 @@ class Graph:
         return neighbours
 
     def clean_ratio(self) -> float:
+        if len(self.edges) == 0:
+            return 0.0
         return len([e for e in self.edges if e.clean]) / len(self.edges)
 
     def width(self) -> float:
@@ -51,7 +53,11 @@ class Graph:
         return self.most_up - self.most_down
     
     def relative_position(self, node: Node) -> tuple[float, float]:
-        return ((node.x - self.most_left) / self.width(), (node.y - self.most_down) / self.height())
+        w = self.width()
+        h = self.height()
+        if w == 0 or h == 0:
+            return (0.0, 0.0)
+        return ((node.x - self.most_left) / w, (node.y - self.most_down) / h)
 
     def to_dict(self):
         return {

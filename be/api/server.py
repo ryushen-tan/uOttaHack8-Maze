@@ -41,7 +41,8 @@ def get_cached_graph(bounds):
         try:
             with open(cache_file, 'r') as f:
                 return json.load(f)
-        except:
+        except (IOError, json.JSONDecodeError) as e:
+            print(f"Cache read error: {e}")
             pass
     return None
 
@@ -52,7 +53,8 @@ def cache_graph(bounds, graph_dict):
     try:
         with open(cache_file, 'w') as f:
             json.dump(graph_dict, f)
-    except:
+    except (IOError, OSError) as e:
+        print(f"Cache write error: {e}")
         pass
 
 @app.route(f'{apiPrefix}/graph', methods=['POST'])
@@ -170,7 +172,7 @@ def handle_start_simulation(data):
                     socketio.emit('update', update_data, room=client_sid)
                     last_update = current_time
                 
-                time.sleep(0.8)
+                time.sleep(0.1)
             
             graph_dict = graph.to_dict()
             workers_list = graph.get_workers_dict(world.workers)

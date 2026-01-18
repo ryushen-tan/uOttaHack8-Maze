@@ -29,7 +29,7 @@ class Location:
         graph_edges = []
         for u, v, _, data in edges:
             oneway = True
-            if 'oneway' in data.keys() and isinstance(data['oneway'], bool):
+            if 'oneway' in data and isinstance(data['oneway'], bool):
                 oneway = data['oneway']
             graph_edges.append((self.get_node_position(self.G.nodes[u]), self.get_node_position(self.G.nodes[v]), oneway))
         

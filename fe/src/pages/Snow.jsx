@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
+import { toast } from 'react-toastify';
 import Map from '../components/Map';
 import GraphOverlay from '../components/GraphOverlay';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
 
 const Snow = () => {
     const [mapCenter, setMapCenter] = useState(null);
@@ -84,18 +87,15 @@ const Snow = () => {
         
         setLoadingGraph(true);
         setShowGraph(false);
-        setMapBounds(bounds); // Store the map bounds used to fetch the graph
+        setMapBounds(bounds);
         
         try {
-            // Add timeout (30 seconds)
-            const controller = new AbortController();            
-            const response = await fetch('http://127.0.0.1:5000/api/graph', {
+            const response = await fetch(`${API_URL}/api/graph`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ bounds: bounds.osmnxFormat }),
-                signal: controller.signal
+                body: JSON.stringify({ bounds: bounds.osmnxFormat })
             });
                         
             if (!response.ok) {
@@ -107,13 +107,10 @@ const Snow = () => {
             setGraphData(data);
             setShowGraph(true);
             setSimulationStarted(false);
+            toast.success('Graph loaded successfully!');
         } catch (error) {
             console.error('Error fetching graph:', error);
-            if (error.name === 'AbortError') {
-                alert('Request timed out. The area might be too large. Try zooming in more on the map before getting bounds.');
-            } else {
-                alert(error.message || 'Failed to fetch graph. Make sure the backend server is running on http://127.0.0.1:5000');
-            }
+            toast.error(error.message || `Failed to fetch graph. Make sure the backend server is running on ${API_URL}`);
         } finally {
             setLoadingGraph(false);
         }
