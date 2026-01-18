@@ -16,6 +16,10 @@ class Graph:
         self.add_node(edge.end)
 
         self.edges.add(edge)
+    
+    def add_edges(self, edges: set[Edge]):
+        for e in edges:
+            self.add_edge(e)
 
     def add_node(self, node: Node):
         self.nodes.add(node)
@@ -28,6 +32,10 @@ class Graph:
             self.most_down = node.y
         if node.y > self.most_up:
             self.most_up = node.y
+    
+    def add_nodes(self, nodes: set[Node]):
+        for n in nodes:
+            self.add_node(n)
     
     def find_neighbours(self, node: Node) -> set[tuple[Node, Edge]]:
         neighbours = set()
