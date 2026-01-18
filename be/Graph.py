@@ -1,6 +1,11 @@
 from Node import Node
 from Edge import Edge
 
+import csv
+import io
+
+from be.Location import RoadPriority
+
 class Graph:
     def __init__(self):
         self.nodes: set[Node] = set()
@@ -76,3 +81,56 @@ class Graph:
         nodes_str = [str(node) for node in self.nodes]
         edges_str = [str(edge) for edge in self.edges]
         return f'nodes: {str(nodes_str)}\nedges: {str(edges_str)}'
+
+    def graph_to_csv(self):
+        print("exporting graph to csv...")
+
+        output = io.StringIO()
+        writer = csv.writer(output)
+
+        writer.writerow(['start_x', 'start_y', 'end_x', 'end_y', 'most_left', 'most_right', 'most_down', 'most_up', 'clean', 'priority', 'oneway'])
+
+        for edge in self.edges:
+            writer.writerow([
+                edge.start.x, edge.start.y,
+                edge.end.x, edge.end.y,
+                self.most_left, self.most_right, self.most_down, self.most_up, 
+                edge.clean, edge.priority.value, edge.oneway
+            ])
+
+        print(output.getvalue())
+
+        return output.getvalue()
+    
+
+    def csv_to_graph(self, csv_data: str):
+        print("loading graph from csv...")
+
+        input = io.StringIO(csv_data)
+        reader = csv.DictReader(input)
+
+        for row in reader:
+            start = Node(float(row['start_x']), float(row['start_y']))
+            end = Node(float(row['end_x']), float(row['end_y']))
+
+            most_left = float(row['most_left'])
+            most_right = float(row['most_right'])
+            most_down = float(row['most_down'])
+            most_up = float(row['most_up'])
+
+            clean = row['clean'].lower() == 'true'
+            priority = int(row['priority'])
+            oneway = row['oneway'].lower() == 'true'
+
+            edge = Edge(start, end)
+
+            self.most_left = min(self.most_left, most_left)
+            self.most_right = max(self.most_right, most_right)
+            self.most_down = min(self.most_down, most_down)
+            self.most_up = max(self.most_up, most_up)
+
+            edge.clean = clean
+            edge.priority = RoadPriority(priority)
+            edge.oneway = oneway
+            
+            self.add_edge(edge)
