@@ -93,7 +93,7 @@ while running:
 
     screen.fill("black")
 
-    # world.play()
+    world.play()
     draw_world(world)
 
     running = not world.is_finished()
