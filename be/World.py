@@ -6,12 +6,12 @@ from Node import Node
 from Edge import Edge
 from Location import Location
 from Worker import Worker
+from SubGraph import generate_sub_graphs, plot_sub_graphs
 
 class World:
     def __init__(self, location: Location, num_workers: int = 10):
         self.graph = Graph()
-        self.workers: list[Worker] = []
-
+        
         #Make a cache every time World()
         south = location.most_down
         west  = location.most_left
@@ -45,9 +45,15 @@ class World:
             #store bounds in cache
             self.graph.graph_to_csv(location)
         
+        self.sub_graphs = generate_sub_graphs(self.graph)
+        
+        self.workers: list[Worker] = []
         for _ in range(num_workers):
             self.workers.append(Worker(self.graph))
     
+    def plot_sub_graphs(self):
+        plot_sub_graphs(self.sub_graphs)
+
     def play(self):
         for worker in self.workers:
             worker.play()

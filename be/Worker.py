@@ -4,7 +4,7 @@ import random, time
 class Worker:
     def __init__(self, graph: Graph, spawn_node: Node = None):
         self.graph: Graph = graph
-        self.position: Node = spawn_node if spawn_node is not None else random.sample(self.graph.nodes, 1)[0]
+        self.position: Node = spawn_node if spawn_node is not None else random.sample(list(self.graph.nodes), 1)[0]
     
     def play(self):
         options = self.graph.find_neighbours(self.position)
@@ -15,7 +15,7 @@ class Worker:
             return
 
         dirty_neighbours = [(n, e) for n, e in options if not e.clean]
-        options = dirty_neighbours if any(dirty_neighbours) else options
+        options = dirty_neighbours if any(dirty_neighbours) else list(options)
         new_pos, edge = random.sample(options, 1)[0]
         self.position = new_pos
         edge.clean = True

@@ -9,7 +9,7 @@ offset = (0.0, 0.0)
 offset_amount = 35
 scale = 1.0
 print(f"Processing graph for {place}...")
-world = World(Location(place))
+world = World(Location(place), 10)
 print("Number of Edges: ", len(world.graph.edges))
 print(f"Processing graph complete in {time.time() - start_time} seconds!")
 
