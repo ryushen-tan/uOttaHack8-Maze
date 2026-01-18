@@ -347,6 +347,10 @@ function GraphOverlay({ graphData, mapBounds, numWorkers, onProgressUpdate, eval
           </div>
           <div className="space-y-2 text-xs" style={{ fontFamily: 'Rubik Pixels, sans-serif' }}>
             <div className="flex justify-between">
+              <span className="text-white/60">Episode:</span>
+              <span>{trainingMetrics.episode || 0}</span>
+            </div>
+            <div className="flex justify-between">
               <span className="text-white/60">Steps:</span>
               <span>{trainingMetrics.step_count?.toLocaleString() || 0}</span>
             </div>
@@ -357,13 +361,19 @@ function GraphOverlay({ graphData, mapBounds, numWorkers, onProgressUpdate, eval
               </div>
             )}
             <div className="flex justify-between">
-              <span className="text-white/60">Total Reward:</span>
-              <span className={trainingMetrics.total_reward >= 0 ? 'text-green-400' : 'text-red-400'}>
-                {trainingMetrics.total_reward?.toLocaleString() || 0}
+              <span className="text-white/60">Episode Reward:</span>
+              <span className={trainingMetrics.episode_reward >= 0 ? 'text-green-400' : 'text-red-400'}>
+                {trainingMetrics.episode_reward?.toLocaleString() || 0}
               </span>
             </div>
             {!trainingMetrics.eval_mode && (
               <>
+                <div className="flex justify-between">
+                  <span className="text-white/60">Total Reward:</span>
+                  <span className={trainingMetrics.total_reward >= 0 ? 'text-green-400' : 'text-red-400'}>
+                    {trainingMetrics.total_reward?.toLocaleString() || 0}
+                  </span>
+                </div>
                 <div className="flex justify-between">
                   <span className="text-white/60">Replay Buffer:</span>
                   <span>{trainingMetrics.replay_size?.toLocaleString() || 0}</span>

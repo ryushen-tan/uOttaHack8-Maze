@@ -27,6 +27,7 @@ class TrainingSession:
         self.is_paused = False
         self.lock = threading.Lock()
         self.total_reward = 0
+        self.episode_reward = 0
         self.step_count = 0
         self.episode = 0
 
@@ -46,7 +47,7 @@ class TrainingSession:
         )
 
         if eval_mode:
-            self.agent.epsilon = 0.0
+            self.agent.epsilon = self.agent.epsilon_min  # Use trained epsilon (0.05)
 
         for worker in self.world.workers:
             worker.setup_worker()
@@ -58,7 +59,10 @@ class TrainingSession:
 
         with self.lock:
             if self.world.is_finished():
-                return False
+                if self.eval_mode:
+                    return False
+                self._reset_episode()
+                return True
 
             step_reward = 0
             for worker in self.world.workers:
@@ -73,9 +77,23 @@ class TrainingSession:
                 step_reward += reward
 
             self.total_reward += step_reward
+            self.episode_reward += step_reward
             self.step_count += 1
 
-            return not self.world.is_finished()
+            return True
+
+    def _reset_episode(self):
+        """Reset the world for a new episode while keeping the trained agent."""
+        self.episode += 1
+        print(f"Episode {self.episode} finished. Reward: {self.episode_reward}, Epsilon: {self.agent.epsilon:.4f}")
+        self.episode_reward = 0
+        
+        for edge in self.world.graph.edges:
+            edge.clean = False
+        
+        for worker in self.world.workers:
+            worker.position = worker.sub_graph.nodes.__iter__().__next__()
+            worker.setup_worker()
 
     def start(self):
         with self.lock:
@@ -128,6 +146,7 @@ class TrainingSession:
         return {
             'episode': self.episode,
             'total_reward': self.total_reward,
+            'episode_reward': self.episode_reward,
             'step_count': self.step_count,
             'eval_mode': self.eval_mode,
             **agent_metrics
