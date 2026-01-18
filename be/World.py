@@ -1,6 +1,4 @@
-from ast import If
-import random
-import os
+import os, random
 from Graph import Graph
 from Node import Node
 from Edge import Edge
@@ -19,7 +17,8 @@ class World:
         full_cache_path = os.path.join("cached_graphs", csv_filename)
 
         #If we already have location's bounds in cache
-        if os.path.exists(full_cache_path):
+        # if os.path.exists(full_cache_path):
+        if False:
             print(f"Loading bounds from cache: {full_cache_path}")
             
             #Then use cached bounds
@@ -43,8 +42,11 @@ class World:
         self.sub_graphs = generate_sub_graphs(self.graph)
         
         self.workers: list[Worker] = []
-        for _ in range(num_workers):
-            self.workers.append(Worker(self.graph))
+        for i in range(num_workers):
+            self.workers.append(Worker(i, self.graph, random.sample(self.sub_graphs, 1)[0], self.workers))
+
+        for worker in self.workers:
+            worker.setup_worker()
     
     def plot_sub_graphs(self):
         plot_sub_graphs(self.sub_graphs)
