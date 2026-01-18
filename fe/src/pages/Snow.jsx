@@ -166,7 +166,7 @@ const Snow = () => {
                         {graphData && (
                             <button
                                 onClick={() => setShowGraph(!showGraph)}
-                                className="hover:cursor-pointer absolute top-6 left-6 px-4 py-2 bg-white/10 backdrop-blur-md border-2 border-white/20 text-white rounded-xl hover:bg-white/20 transition-all shadow-lg z-[4000]"
+                                className="hover:cursor-pointer absolute bottom-6 right-6 px-4 py-2 bg-white/10 backdrop-blur-md border-2 border-white/20 text-white rounded-xl hover:bg-white/20 transition-all shadow-lg z-[4000]"
                                 style={{ fontFamily: 'Rubik Pixels, sans-serif' }}
                             >
                                 {showGraph ? 'Hide Graph' : 'Show Graph'}
