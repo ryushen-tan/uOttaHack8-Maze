@@ -50,7 +50,7 @@ class Worker:
             self.position = action[0]
             was_clean = action[1].clean
             action[1].clean = True
-            return self.get_state(), -2 if was_clean else 3, self.is_done()
+            return self.get_state(), -2 if was_clean else 7 - action[1].priority.value, self.is_done()
         
         elif isinstance(action[1], SubGraphEdge):
             self.sub_graph = action[1].to_sub_graph if self.position in action[1].from_sub_graph.nodes else action[1].from_sub_graph
@@ -58,7 +58,7 @@ class Worker:
             sub_graph_clean = self.sub_graph.clean_ratio() >= 1
             was_clean = action[1].edge.clean
             action[1].edge.clean = True
-            return self.get_state(), 5 if sub_graph_clean else -4 if was_clean else 2, self.is_done()
+            return self.get_state(), 20 if sub_graph_clean else -10 if was_clean else 7 - action[1].edge.priority.value, self.is_done()
 
         else:
             raise "ERROR: Selected action is not of correct type!"
