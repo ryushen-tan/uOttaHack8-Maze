@@ -4,7 +4,10 @@ from Edge import Edge
 import csv
 import io
 
-from be.Location import RoadPriority
+import unittest
+import os
+
+from Location import RoadPriority
 
 class Graph:
     def __init__(self):
@@ -82,55 +85,66 @@ class Graph:
         edges_str = [str(edge) for edge in self.edges]
         return f'nodes: {str(nodes_str)}\nedges: {str(edges_str)}'
 
-    def graph_to_csv(self):
+    def graph_to_csv(self, file_name: str = 'graph_export.csv') -> str:
         print("exporting graph to csv...")
 
-        output = io.StringIO()
-        writer = csv.writer(output)
+        folder_name = "csv"
 
-        writer.writerow(['start_x', 'start_y', 'end_x', 'end_y', 'most_left', 'most_right', 'most_down', 'most_up', 'clean', 'priority', 'oneway'])
+        if not os.path.exists(folder_name):
+            os.makedirs(folder_name)
+        
+        full_path = os.path.join(folder_name, file_name)
+        
+        print(f"exporting graph to {full_path}...")
 
-        for edge in self.edges:
-            writer.writerow([
-                edge.start.x, edge.start.y,
-                edge.end.x, edge.end.y,
-                self.most_left, self.most_right, self.most_down, self.most_up, 
-                edge.clean, edge.priority.value, edge.oneway
-            ])
+        with open(full_path, 'w', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(['start_x', 'start_y', 'end_x', 'end_y', 'most_left', 'most_right', 'most_down', 'most_up', 'clean', 'priority', 'oneway'])
 
-        print(output.getvalue())
-
-        return output.getvalue()
+            for edge in self.edges:
+                writer.writerow([
+                    edge.start.x, edge.start.y,
+                    edge.end.x, edge.end.y,
+                    self.most_left, self.most_right, self.most_down, self.most_up, 
+                    edge.clean, edge.priority.value, edge.oneway
+                ])
     
 
-    def csv_to_graph(self, csv_data: str):
+    def csv_to_graph(self, file_path: str):
         print("loading graph from csv...")
 
-        input = io.StringIO(csv_data)
-        reader = csv.DictReader(input)
+        try: 
+            with open(file_path, 'r') as f: 
+                reader = csv.DictReader(f)
 
-        for row in reader:
-            start = Node(float(row['start_x']), float(row['start_y']))
-            end = Node(float(row['end_x']), float(row['end_y']))
+                for row in reader: 
+                    start = Node(float(row['start_x']), float(row['start_y']))
+                    end = Node(float(row['end_x']), float(row['end_y']))
 
-            most_left = float(row['most_left'])
-            most_right = float(row['most_right'])
-            most_down = float(row['most_down'])
-            most_up = float(row['most_up'])
+                    most_left = float(row['most_left'])
+                    most_right = float(row['most_right'])
+                    most_down = float(row['most_down'])
+                    most_up = float(row['most_up'])
 
-            clean = row['clean'].lower() == 'true'
-            priority = int(row['priority'])
-            oneway = row['oneway'].lower() == 'true'
+                    clean = row['clean'].lower() == 'true'
+                    priority = int(row['priority'])
+                    oneway = row['oneway'].lower() == 'true'
 
-            edge = Edge(start, end)
+                    edge = Edge(start, end)
 
-            self.most_left = min(self.most_left, most_left)
-            self.most_right = max(self.most_right, most_right)
-            self.most_down = min(self.most_down, most_down)
-            self.most_up = max(self.most_up, most_up)
+                    self.most_left = min(self.most_left, most_left)
+                    self.most_right = max(self.most_right, most_right)
+                    self.most_down = min(self.most_down, most_down)
+                    self.most_up = max(self.most_up, most_up)
 
-            edge.clean = clean
-            edge.priority = RoadPriority(priority)
-            edge.oneway = oneway
-            
-            self.add_edge(edge)
+                    edge.clean = clean
+                    edge.priority = RoadPriority(priority)
+                    edge.oneway = oneway
+                    
+                    self.add_edge(edge)
+
+                print("Graph loaded from graph_export.csv")
+        except FileNotFoundError:
+            print(f"Error: The file '{file_path}' was not found.")
+        except Exception as e:
+            print(f"Error parsing CSV: {e}")
