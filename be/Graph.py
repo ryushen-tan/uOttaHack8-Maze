@@ -48,6 +48,8 @@ class Graph:
         return neighbours
 
     def clean_ratio(self) -> float:
+        if len(self.edges) == 0:
+            return 0.0
         return len([e for e in self.edges if e.clean]) / len(self.edges)
 
     def width(self) -> float:
@@ -57,7 +59,11 @@ class Graph:
         return self.most_up - self.most_down
     
     def relative_position(self, node: Node) -> tuple[float, float]:
-        return ((node.x - self.most_left) / self.width(), (node.y - self.most_down) / self.height())
+        w = self.width()
+        h = self.height()
+        if w == 0 or h == 0:
+            return (0.0, 0.0)
+        return ((node.x - self.most_left) / w, (node.y - self.most_down) / h)
 
     def to_dict(self):
         return {
@@ -66,7 +72,8 @@ class Graph:
                 {
                     'start': {'x': edge.start.x, 'y': edge.start.y},
                     'end': {'x': edge.end.x, 'y': edge.end.y},
-                    'length': edge.length
+                    'length': edge.length,
+                    'clean': edge.clean
                 }
                 for edge in self.edges
             ],
@@ -77,6 +84,10 @@ class Graph:
                 'up': self.most_up
             }
         }
+    
+    def get_workers_dict(self, workers):
+        """Serialize worker positions to a list of dictionaries."""
+        return [{'x': worker.position.x, 'y': worker.position.y} for worker in workers]
 
     def __str__(self):
         nodes_str = [str(node) for node in self.nodes]
