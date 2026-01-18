@@ -4,7 +4,7 @@ from Location import RoadPriority
 import time
 
 start_time = time.time()
-place = "Orleans, Ontario, Canada"
+place = "Kanata, Ontario, Canada"
 offset = (0.0, 0.0)
 offset_amount = 35
 scale = 1.0

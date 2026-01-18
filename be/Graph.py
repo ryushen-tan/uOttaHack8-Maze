@@ -2,10 +2,9 @@ from Node import Node
 from Edge import Edge
 
 import csv
-
 import os
 
-from Location import RoadPriority
+from Location import RoadPriority, Location
 
 class Graph:
     def __init__(self):
@@ -18,14 +17,14 @@ class Graph:
         self.most_up = float('-inf')
 
     def add_edge(self, edge: Edge):
-        self.add_node(edge.start)
-        self.add_node(edge.end)
-
         self.edges.add(edge)
     
     def add_edges(self, edges: set[Edge]):
         for e in edges:
             self.add_edge(e)
+
+        self.nodes.add(edge.start)
+        self.nodes.add(edge.end)
 
     def add_node(self, node: Node):
         self.nodes.add(node)
@@ -104,12 +103,14 @@ class Graph:
         edges_str = [str(edge) for edge in self.edges]
         return f'nodes: {str(nodes_str)}\nedges: {str(edges_str)}'
 
-    def graph_to_csv(self, file_name: str = 'graph_export.csv') -> str:
+    def graph_to_csv(self, location) -> str:
         folder_name = "cached_graphs"
 
         if not os.path.exists(folder_name):
             os.makedirs(folder_name)
         
+        file_name = Location.get_cache_name(location)
+
         full_path = os.path.join(folder_name, file_name)
 
         with open(full_path, 'w', newline='') as f:
@@ -127,37 +128,46 @@ class Graph:
     def csv_to_graph(self, file_path: str):
         print("loading graph from csv...")
 
+        self.edges = set()
+        self.nodes = set()
+
+        node_map = {}
+
         try: 
             with open(file_path, 'r') as f: 
                 reader = csv.DictReader(f)
 
                 for row in reader: 
-                    start = Node(float(row['start_x']), float(row['start_y']))
-                    end = Node(float(row['end_x']), float(row['end_y']))
+                    sx, sy = float(row['start_x']), float(row['start_y'])
+                    ex, ey = float(row['end_x']), float(row['end_y'])
+                    
+                    if (sx, sy) not in node_map:
+                        node_map[(sx, sy)] = Node(sx, sy)
+                    
+                    start_node = node_map[(sx, sy)]
 
-                    most_left = float(row['most_left'])
-                    most_right = float(row['most_right'])
-                    most_down = float(row['most_down'])
-                    most_up = float(row['most_up'])
+                    if (ex, ey) not in node_map:
+                        node_map[(ex, ey)] = Node(ex, ey)
+                        
+                    end_node = node_map[(ex, ey)]
 
-                    clean = row['clean'].lower() == 'true'
-                    priority = int(row['priority'])
-                    oneway = row['oneway'].lower() == 'true'
+                    self.most_left  = float(row['most_left'])
+                    self.most_right = float(row['most_right'])
+                    self.most_down  = float(row['most_down'])
+                    self.most_up    = float(row['most_up'])
 
-                    edge = Edge(start, end)
+                    is_clean = row['clean'].lower() == 'true'
+                    priority_val = int(row['priority'])
+                    is_oneway = row['oneway'].lower() == 'true'
 
-                    self.most_left = min(self.most_left, most_left)
-                    self.most_right = max(self.most_right, most_right)
-                    self.most_down = min(self.most_down, most_down)
-                    self.most_up = max(self.most_up, most_up)
-
-                    edge.clean = clean
-                    edge.priority = RoadPriority(priority)
-                    edge.oneway = oneway
+                    edge = Edge(start_node, end_node)
+                    edge.clean = is_clean
+                    edge.priority = RoadPriority(priority_val)
+                    edge.oneway = is_oneway
                     
                     self.add_edge(edge)
 
-                print("Graph loaded from graph_export.csv")
+                print(f"✅ Graph loaded! ({len(self.edges)} edges, {len(self.nodes)} nodes)")
         except FileNotFoundError:
             print(f"Error: The file '{file_path}' was not found.")
         except Exception as e:

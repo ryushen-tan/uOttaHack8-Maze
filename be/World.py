@@ -13,8 +13,13 @@ class World:
         self.graph = Graph()
         
         #Make a cache every time World()
-        location_name = getattr(location, 'name', 'default_location')
-        csv_filename = f"{location_name}_cache.csv"
+        south = location.most_down
+        west  = location.most_left
+        north = location.most_up
+        east  = location.most_right
+
+        # Creates a unique ID like: "map_45.42_-75.69_45.43_-75.68.csv"
+        csv_filename = f"map_{south:.4f}_{west:.4f}_{north:.4f}_{east:.4f}.csv"
 
         full_cache_path = os.path.join("cached_graphs", csv_filename)
 
@@ -38,7 +43,7 @@ class World:
                 self.graph.add_edge(Edge(Node(start[0], start[1]), Node(end[0], end[1]), oneway, priority))
 
             #store bounds in cache
-            self.graph.graph_to_csv(csv_filename)
+            self.graph.graph_to_csv(location)
         
         self.sub_graphs = generate_sub_graphs(self.graph)
         

@@ -28,6 +28,16 @@ class Location:
             self.G = ox.graph_from_place(place, network_type='drive', simplify=True)
         else:
             raise ValueError("Either 'place' or 'bounds' must be provided")
+        
+        nodes = ox.graph_to_gdfs(self.G, edges=False)
+        
+        self.most_left  = nodes.geometry.x.min() # West (Longitude)
+        self.most_down  = nodes.geometry.y.min() # South (Latitude)
+        self.most_right = nodes.geometry.x.max() # East
+        self.most_up    = nodes.geometry.y.max() # North
+
+    def get_cache_name(self): 
+        return f"map_{self.most_down:.4f}_{self.most_left:.4f}_{self.most_up:.4f}_{self.most_right:.4f}.csv"
     
     def get_nodes(self) -> list[tuple[float, float]]:
         return [(data['x'], data['y']) for _, data in self.G.nodes.items()]
