@@ -66,9 +66,11 @@ function GraphOverlay({ graphData, mapBounds, numWorkers, onProgressUpdate }) {
   const canvasRef = useRef(null);
   const [liveData, setLiveData] = useState(null);
   const [progress, setProgress] = useState(0);
+  const [trainingMetrics, setTrainingMetrics] = useState(null);
   const socketRef = useRef(null);
   const imageRef = useRef(null);
   const [showLegend, setShowLegend] = useState(true);
+  const [showTraining, setShowTraining] = useState(true);
 
   const mergeLiveData = (prev, data) => {
     if (!prev) {
@@ -104,6 +106,7 @@ function GraphOverlay({ graphData, mapBounds, numWorkers, onProgressUpdate }) {
     if (!numWorkers) {
       setLiveData(null);
       setProgress(0);
+      setTrainingMetrics(null);
       return;
     }
 
@@ -125,19 +128,21 @@ function GraphOverlay({ graphData, mapBounds, numWorkers, onProgressUpdate }) {
       console.log('Received initial_state:', data);
       setLiveData(data);
       setProgress(data.progress || 0);
+      if (data.training) setTrainingMetrics(data.training);
       if (onProgressUpdate) onProgressUpdate(data.progress || 0);
     });
 
     socket.on('update', (data) => {
-      console.log('Received update:', data);
       setLiveData(prev => mergeLiveData(prev, data));
       setProgress(data.progress || 0);
+      if (data.training) setTrainingMetrics(data.training);
       if (onProgressUpdate) onProgressUpdate(data.progress || 0);
     });
 
     socket.on('final_state', (data) => {
       setLiveData(prev => mergeLiveData(prev, { ...data, progress: 1.0 }));
       setProgress(1.0);
+      if (data.training) setTrainingMetrics(data.training);
       if (onProgressUpdate) onProgressUpdate(1.0);
     });
 
@@ -147,6 +152,9 @@ function GraphOverlay({ graphData, mapBounds, numWorkers, onProgressUpdate }) {
     });
 
     return () => {
+      if (socketRef.current) {
+        socketRef.current.emit('stop_simulation');
+      }
       socket.disconnect();
       socketRef.current = null;
     };
@@ -318,6 +326,63 @@ function GraphOverlay({ graphData, mapBounds, numWorkers, onProgressUpdate }) {
           style={{ fontFamily: 'Rubik Pixels, sans-serif' }}
         >
           Show Legend
+        </button>
+      )}
+      {showTraining && trainingMetrics && (
+        <div className="absolute top-4 left-4 bg-black/80 backdrop-blur-md border-2 border-white/20 text-white rounded-xl p-4 z-[2000] min-w-[220px]">
+          <div className="flex items-center justify-between mb-3">
+            <div className="text-sm font-bold" style={{ fontFamily: 'Rubik Pixels, sans-serif' }}>
+              DQN Training
+            </div>
+            <button
+              onClick={() => setShowTraining(false)}
+              className="text-white/60 hover:text-white transition-colors text-lg"
+              style={{ fontFamily: 'Rubik Pixels, sans-serif' }}
+            >
+              x
+            </button>
+          </div>
+          <div className="space-y-2 text-xs" style={{ fontFamily: 'Rubik Pixels, sans-serif' }}>
+            <div className="flex justify-between">
+              <span className="text-white/60">Steps:</span>
+              <span>{trainingMetrics.step_count?.toLocaleString() || 0}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-white/60">Epsilon:</span>
+              <span>{trainingMetrics.epsilon?.toFixed(4) || '1.0000'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-white/60">Total Reward:</span>
+              <span className={trainingMetrics.total_reward >= 0 ? 'text-green-400' : 'text-red-400'}>
+                {trainingMetrics.total_reward?.toLocaleString() || 0}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-white/60">Replay Buffer:</span>
+              <span>{trainingMetrics.replay_size?.toLocaleString() || 0}</span>
+            </div>
+            {trainingMetrics.last_loss > 0 && (
+              <div className="flex justify-between">
+                <span className="text-white/60">Loss:</span>
+                <span>{trainingMetrics.last_loss?.toFixed(4)}</span>
+              </div>
+            )}
+          </div>
+          <div className="mt-3 pt-3 border-t border-white/20">
+            <div className="text-xs text-white/40" style={{ fontFamily: 'Rubik Pixels, sans-serif' }}>
+              {trainingMetrics.epsilon > 0.5 ? 'Exploring...' : 
+               trainingMetrics.epsilon > 0.1 ? 'Learning...' : 'Exploiting!'}
+            </div>
+          </div>
+        </div>
+      )}
+      {!showTraining && trainingMetrics && (
+        <button
+          onClick={() => setShowTraining(true)}
+          className="absolute top-20 left-4 bg-black/80 backdrop-blur-md border-2 border-white/20 text-white rounded-xl px-3 py-2 z-[2000] hover:bg-black/90 transition-colors"
+          style={{ fontFamily: 'Rubik Pixels, sans-serif' }}
+        >
+          Show Training
         </button>
       )}
     </>

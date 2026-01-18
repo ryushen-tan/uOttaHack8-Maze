@@ -17,8 +17,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from Location import Location
 from World import World
 
-# Import constants from the same directory
 from constants import SIMULATION_UPDATE_INTERVAL, SIMULATION_STEP_DELAY
+from training_session import TrainingSession
 
 ox.settings.use_cache = True
 ox.settings.log_console = False
@@ -28,6 +28,8 @@ app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 apiPrefix = '/api'
+
+active_sessions = {}
 
 cache_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'api', 'cache')
 os.makedirs(cache_dir, exist_ok=True)
@@ -155,58 +157,53 @@ def handle_start_simulation(data):
             emit('error', {'message': 'Invalid bounds. Expected [min_lat, max_lat, min_lon, max_lon]'})
             return
         
-        print(f"Starting simulation for session {session_id} with {num_workers} workers")
+        if client_sid in active_sessions:
+            active_sessions[client_sid].stop()
+            del active_sessions[client_sid]
+        
+        print(f"Starting DQN training simulation for session {session_id} with {num_workers} workers")
         
         location = Location(bounds=bounds)
         world = World(location, num_workers)
         
-        graph = world.graph
-        graph_dict = graph.to_dict()
-        workers_list = graph.get_workers_dict(world.workers)
-        progress = graph.clean_ratio()
+        training_session = TrainingSession(world, session_id, num_workers)
+        active_sessions[client_sid] = training_session
         
-        initial_state = {
-            **graph_dict,
-            'workers': workers_list,
-            'progress': progress
-        }
+        initial_state = training_session.get_initial_state()
         emit('initial_state', initial_state)
         
-        def run_simulation():
+        def run_training():
             update_interval = SIMULATION_UPDATE_INTERVAL
             last_update = time.time()
             
-            while not world.is_finished():
-                world.play()
+            training_session.start()
+            
+            while training_session.is_running:
+                should_continue = training_session.step()
+                
+                if not should_continue:
+                    break
                 
                 current_time = time.time()
                 if current_time - last_update >= update_interval:
-                    graph_dict = graph.to_dict()
-                    workers_list = graph.get_workers_dict(world.workers)
-                    progress = graph.clean_ratio()
-                    
-                    update_data = {
-                        'workers': workers_list,
-                        'edges': graph_dict['edges'],
-                        'progress': progress
-                    }
-                    
+                    update_data = training_session.get_state_update()
                     socketio.emit('update', update_data, room=client_sid)
                     last_update = current_time
                 
                 time.sleep(SIMULATION_STEP_DELAY)
             
-            graph_dict = graph.to_dict()
-            workers_list = graph.get_workers_dict(world.workers)
-            final_state = {
-                'workers': workers_list,
-                'edges': graph_dict['edges'],
-                'progress': 1.0
-            }
+            final_state = training_session.get_state_update()
+            final_state['progress'] = 1.0
             socketio.emit('final_state', final_state, room=client_sid)
-            print(f"Simulation completed for session {session_id}")
+            
+            if client_sid in active_sessions:
+                del active_sessions[client_sid]
+            
+            print(f"Training completed for session {session_id}")
+            metrics = training_session.get_training_metrics()
+            print(f"Final metrics: steps={metrics['step_count']}, reward={metrics['total_reward']}, epsilon={metrics['epsilon']:.4f}")
         
-        thread = threading.Thread(target=run_simulation, daemon=True)
+        thread = threading.Thread(target=run_training, daemon=True)
         thread.start()
         
     except Exception as e:
@@ -214,6 +211,53 @@ def handle_start_simulation(data):
         print(f"Error in start_simulation: {str(e)}")
         print(f"Traceback: {error_trace}")
         emit('error', {'message': str(e), 'traceback': error_trace})
+
+
+@socketio.on('stop_simulation')
+def handle_stop_simulation(data=None):
+    client_sid = request.sid
+    
+    if client_sid in active_sessions:
+        session = active_sessions[client_sid]
+        session.stop()
+        print(f"Stopped simulation for client {client_sid}")
+        emit('simulation_stopped', {'message': 'Simulation stopped'})
+    else:
+        emit('error', {'message': 'No active simulation to stop'})
+
+
+@socketio.on('pause_simulation')
+def handle_pause_simulation(data=None):
+    client_sid = request.sid
+    
+    if client_sid in active_sessions:
+        session = active_sessions[client_sid]
+        session.pause()
+        emit('simulation_paused', {'message': 'Simulation paused'})
+    else:
+        emit('error', {'message': 'No active simulation to pause'})
+
+
+@socketio.on('resume_simulation')
+def handle_resume_simulation(data=None):
+    client_sid = request.sid
+    
+    if client_sid in active_sessions:
+        session = active_sessions[client_sid]
+        session.resume()
+        emit('simulation_resumed', {'message': 'Simulation resumed'})
+    else:
+        emit('error', {'message': 'No active simulation to resume'})
+
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    client_sid = request.sid
+    
+    if client_sid in active_sessions:
+        active_sessions[client_sid].stop()
+        del active_sessions[client_sid]
+        print(f"Client {client_sid} disconnected, stopped their simulation")
 
 if __name__ == '__main__':
     socketio.run(app, debug=True, port=5000)

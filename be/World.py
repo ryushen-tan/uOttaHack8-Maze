@@ -45,10 +45,11 @@ class World:
             self.graph.graph_to_csv(location)
         
         self.sub_graphs = generate_sub_graphs(self.graph)
+        sub_graphs_list = list(self.sub_graphs)
         
         self.workers: list[Worker] = []
         for i in range(num_workers):
-            self.workers.append(Worker(i, self.graph, random.sample(self.sub_graphs, 1)[0], self.workers))
+            self.workers.append(Worker(i, self.graph, random.sample(sub_graphs_list, 1)[0], self.workers))
 
         for worker in self.workers:
             worker.setup_worker()

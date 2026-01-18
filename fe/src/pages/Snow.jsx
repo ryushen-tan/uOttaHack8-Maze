@@ -264,7 +264,7 @@ const Snow = () => {
                             } text-white`}
                             style={{ fontFamily: 'Rubik Pixels, sans-serif' }}
                         >
-                            {simulationStarted ? 'Stop Simulation' : 'Start Simulation'}
+                            {simulationStarted ? 'Stop Training' : 'Start Training'}
                         </button>
                     </div>
                 </div>

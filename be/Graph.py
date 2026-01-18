@@ -18,13 +18,12 @@ class Graph:
 
     def add_edge(self, edge: Edge):
         self.edges.add(edge)
+        self.add_node(edge.start)
+        self.add_node(edge.end)
     
     def add_edges(self, edges: set[Edge]):
         for e in edges:
             self.add_edge(e)
-
-        self.nodes.add(edge.start)
-        self.nodes.add(edge.end)
 
     def add_node(self, node: Node):
         self.nodes.add(node)
@@ -73,6 +72,12 @@ class Graph:
         return ((node.x - self.most_left) / w, (node.y - self.most_down) / h)
 
     def to_dict(self):
+        import math
+        def safe_float(val):
+            if math.isinf(val) or math.isnan(val):
+                return 0.0
+            return val
+        
         return {
             'nodes': [{'x': node.x, 'y': node.y} for node in self.nodes],
             'edges': [
@@ -87,10 +92,10 @@ class Graph:
                 for edge in self.edges
             ],
             'bounds': {
-                'left': self.most_left,
-                'right': self.most_right,
-                'down': self.most_down,
-                'up': self.most_up
+                'left': safe_float(self.most_left),
+                'right': safe_float(self.most_right),
+                'down': safe_float(self.most_down),
+                'up': safe_float(self.most_up)
             }
         }
     
