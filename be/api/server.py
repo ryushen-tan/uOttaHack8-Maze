@@ -10,7 +10,7 @@ ox.settings.max_query_area_size = 50 * 1000 * 1000  # 50 km² in square meters
 # Add parent directory to path to import modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from DataFetch import Location
+from Location import Location
 from World import World
 
 app = Flask(__name__)
