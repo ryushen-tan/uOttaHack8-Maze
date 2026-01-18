@@ -1,9 +1,10 @@
 import pygame
-from World import World, Node, Edge, Location, Graph, Worker
+from World import World, Node, Edge, Location, Worker
+from Location import RoadPriority
 import time
 
 start_time = time.time()
-place = "Orleans, Ontario, Canada"
+place = "Ottawa, Canada"
 offset = (0.0, 0.0)
 offset_amount = 35
 scale = 1.0
@@ -22,6 +23,25 @@ def grid_to_screen(node: Node) -> tuple[float, float]:
     relative_pos = world.graph.relative_position(node)
     return (((relative_pos[0]) * screen.get_width() * scale) - (offset[0] * scale), ((1 - relative_pos[1]) * screen.get_height() * scale) - (offset[1] * scale))
 
+def priorty_color(priorty: RoadPriority) -> str:
+    match priorty:
+        case RoadPriority.MOTORWAY_LINK:
+            return '#8B0000'
+        case RoadPriority.MOTORWAY:
+            return '#8B0000'
+        case RoadPriority.TRUNK:
+            return '#FF0000'
+        case RoadPriority.PRIMARY:
+            return '#FF8C00'
+        case RoadPriority.SECONDARY:
+            return '#FFD700'
+        case RoadPriority.TERTIARY:
+            return '#87CEEB'
+        case RoadPriority.RESIDENTIAL:
+            return '#D3D3D3'
+        case RoadPriority.UNCLASSIFIED:
+            return '#D3D3D3'
+
 def node_in_scale_range(node: Node) -> bool:
     relative_pos = world.graph.relative_position(node)
     return (offset[0] / screen.get_width()) <= relative_pos[0] <= (offset[0] / screen.get_width()) + (1 / scale) and (offset[1] / screen.get_height()) <= 1 - relative_pos[1] <= (offset[1] / screen.get_height()) + (1 / scale)
@@ -33,7 +53,7 @@ def draw_node(node: Node):
 
 def draw_edge(edge: Edge):
     if node_in_scale_range(edge.start) or node_in_scale_range(edge.end):
-        color = ("purple" if edge.oneway else "blue") if not edge.clean else "green"
+        color = priorty_color(edge.priority) if not edge.clean else "green"
         scale = 1 if edge.oneway else 2
         pygame.draw.line(screen, color, grid_to_screen(edge.start), grid_to_screen(edge.end), scale)
 
@@ -73,7 +93,7 @@ while running:
 
     screen.fill("black")
 
-    world.play()
+    # world.play()
     draw_world(world)
 
     running = not world.is_finished()
